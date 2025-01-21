@@ -1,41 +1,34 @@
 import { Injectable } from '@angular/core';
 import { Reservation } from '../models/reservation';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ReservationService {
-  private reservations:Reservation[] = [];
 
-  constructor() { 
-    let reservation = localStorage.getItem("reservation")
-    this.reservations = reservation ? JSON.parse(reservation) : [];
+  private readonly apiUrl = "http://localhost:3001"
+
+  constructor(private readonly http:HttpClient) { }
+
+  getAllReservations():Observable<Reservation[]>{
+    return this.http.get<Reservation[]>(this.apiUrl+"/reservations");
   }
 
-  getAllReservations():Reservation[]{
-    return this.reservations;
+  addReservation(reservation:Reservation):Observable<void>{
+    return this.http.post<void>(this.apiUrl+"/reservations", reservation);
   }
 
-  addReservation(reservation:Reservation){
-    reservation.id = Date.now().toString();
-    this.reservations.push(reservation);
-    localStorage.setItem("reservation", JSON.stringify(this.reservations));
+  updateReservation(id:string, reservation:Reservation):Observable<void>{
+    return this.http.put<void>(this.apiUrl+"/reservations/"+id, reservation);
   }
 
-  updateReservation(id:string, reservation:Reservation){
-    const index = this.reservations.findIndex(res => res.id === id);
-    reservation.id = id;
-    this.reservations[index] = reservation;
-    localStorage.setItem("reservation", JSON.stringify(this.reservations));
+  deleteReservation(id:string):Observable<void>{
+    return this.http.delete<void>(this.apiUrl+"/reservations/"+id);
   }
 
-  deleteReservation(id:string){
-    const index = this.reservations.findIndex(res => res.id === id);
-    this.reservations.splice(index, 1);
-    localStorage.setItem("reservation", JSON.stringify(this.reservations));
-  }
-
-  getReservationById(id:string):Reservation | undefined{
-    return this.reservations.find(reservation => reservation.id === id);
+  getReservationById(id:string):Observable<Reservation>{
+    return this.http.get<Reservation>(this.apiUrl+"/reservations/"+id);
   }
 }
